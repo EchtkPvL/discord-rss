@@ -1,0 +1,8 @@
+services:
+  discord-rss:
+    build: .
+    image: discord-rss:local
+    container_name: discord-rss
+    restart: unless-stopped
+    volumes:
+      - ./data:/data

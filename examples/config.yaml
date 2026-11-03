@@ -1,0 +1,18 @@
+# Copy to data/config.yaml. Re-read on every poll, no restart needed.
+
+# Time between polls (Go duration, minimum 1m). Default: 5m
+interval: 5m
+
+feeds:
+  # name:  shown as the webhook username, required
+  # url:   RSS or Atom feed URL, required
+  # hook:  Discord webhook URL, required (keep it secret)
+  # image: thumbnail shown in every embed, optional
+  - name: Example Feed
+    url: https://example.com/feed.xml
+    hook: https://discord.com/api/webhooks/000000000000000000/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    image: https://example.com/logo.png
+
+  - name: Another Feed
+    url: https://example.org/atom.xml
+    hook: https://discord.com/api/webhooks/000000000000000000/yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
