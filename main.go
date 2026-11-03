@@ -96,18 +96,28 @@ func run(ctx context.Context) time.Duration {
 		slog.Error("load state", "err", err)
 		return cfg.Interval
 	}
+	// Never post anything we cannot record, or the same items would be reposted every poll.
+	if err := saveState(state); err != nil {
+		slog.Error("state not writable, skipping poll (is the data dir owned by uid 65532?)", "err", err)
+		return cfg.Interval
+	}
 	for _, f := range cfg.Feeds {
 		if ctx.Err() != nil {
 			break
 		}
-		if last, err := poll(ctx, f, state[f.URL]); err != nil {
+		last, err := poll(ctx, f, state[f.URL])
+		if err != nil {
 			slog.Error("poll", "feed", f.Name, "err", err)
-		} else {
-			state[f.URL] = last
 		}
-	}
-	if err := saveState(state); err != nil {
-		slog.Error("save state", "err", err)
+		if last.Equal(state[f.URL]) {
+			continue
+		}
+		// Save after every feed so a crash cannot cause reposts of finished feeds.
+		state[f.URL] = last
+		if err := saveState(state); err != nil {
+			slog.Error("save state", "err", err)
+			break
+		}
 	}
 	return cfg.Interval
 }
