@@ -1,25 +1,30 @@
-# Discord RSS Feed Manager
+# discord-rss
 
-RSS and Atom feeds to Discord webhooks with web management UI.
+Polls RSS/Atom feeds and posts new items to Discord webhooks.
+Slim Go rewrite of [3ventic/discord-rss](https://github.com/3ventic/discord-rss): no UI, no HTTP server, no Redis.
 
-## Usage
+## Setup
 
-### Docker
+```sh
+mkdir -p data
+cp examples/config.yaml data/config.yaml   # then edit it
+chown -R 65532:65532 data                  # distroless nonroot user
+docker compose up -d --build
+docker compose logs -f
+```
 
-Pull and run from the docker image from the GitHub repository. Mount /tmp/appdata for persistence.
+## Files
 
-### Native
+| File | Purpose |
+| --- | --- |
+| `data/config.yaml` | Feeds and poll interval, edited by hand, re-read on every poll. See `examples/config.yaml`. |
+| `data/state.json` | Timestamp of the last posted item per feed URL, managed by the app. See `examples/state.json`. |
 
-Install node 14+ and npm, and run `npm install`, `npm run build`, and `npm run start`
+Paths can be overridden with the `CONFIG` and `STATE` environment variables.
 
-### Configuration
+## Behaviour
 
-The service can be configured using environment variables. Update interval can be configured in minutes by setting `INTERVAL` (default 5). If reverse proxying to a subfolder, set `BASE_PATH`. Port can be changed by setting `PORT`.
-
-## Security
-
-It is important to either use a reverse proxy with auth or limit access to localhost only. The application itself does not currently have any access control built-in.
-
-## Screenshots
-
-![](https://meme.stream/fh/TangibleImmediatePartyTime-RSS_Settings__Firefox_Developer_Edition.png)
+- A newly added feed posts nothing on its first poll, it only records the current position.
+  To backfill, put an older timestamp for its URL into `data/state.json`.
+- New items are posted oldest first, batched to Discord's limits (10 embeds, 6000 characters per message).
+- If posting fails, the state is not advanced and the items are retried on the next poll.
